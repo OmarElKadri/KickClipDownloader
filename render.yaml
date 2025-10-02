@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: kick-clip-downloader
+    env: python
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: |
+      pip install --upgrade pip
+      pip install flask yt-dlp
+    startCommand: flask run --host=0.0.0.0 --port $PORT
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: SESSION_SECRET
+        generateValue: true
+    disk:
+      name: downloads
+      mountPath: /opt/render/project/src/downloads
+      sizeGB: 1
+
