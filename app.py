@@ -29,6 +29,21 @@ def download_kick_clip(url, output_path="kick_clip"):
         'quiet': True,
         'no_warnings': True,
         'compat_opts': ['filename'],
+        # Improve resilience against 403/fragment errors
+        'retries': 10,
+        'fragment_retries': 10,
+        'concurrent_fragment_downloads': 1,
+        # Send realistic headers some sites require
+        'http_headers': {
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/127.0.0.0 Safari/537.36'
+            ),
+            'Referer': url,
+            'Origin': 'https://kick.com',
+            'Accept-Language': 'en-US,en;q=0.9',
+        },
     }
 
     try:
@@ -39,7 +54,11 @@ def download_kick_clip(url, output_path="kick_clip"):
                 filename = filename.rsplit('.', 1)[0] + '.mp4'
         return {'success': True, 'filename': filename}
     except Exception as e:
-        return {'success': False, 'error': str(e)}
+        # Trim very long yt-dlp tracebacks to a concise message
+        message = str(e)
+        if 'HTTP Error 403' in message:
+            message = 'Access denied (403). Try again later or provide cookies.'
+        return {'success': False, 'error': message}
 
 @app.route('/')
 def index():
